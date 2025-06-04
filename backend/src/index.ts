@@ -4,6 +4,9 @@ import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes';
 import agentRoutes from './routes/agentRoutes';
 import usageRoutes from './routes/usageRoutes';
+import activityRoutes from './routes/activityRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
+
 
 
 import cors from 'cors';
@@ -25,6 +28,9 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api/usage', usageRoutes);
+app.use('/api/activity', activityRoutes);
+app.use('/api/analytics', analyticsRoutes);
+
 
 
 app.get('/test', (req, res) => {
