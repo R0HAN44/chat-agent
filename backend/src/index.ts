@@ -2,6 +2,10 @@ import express from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes';
+import agentRoutes from './routes/agentRoutes';
+import usageRoutes from './routes/usageRoutes';
+
+
 import cors from 'cors';
 
 dotenv.config();
@@ -19,6 +23,9 @@ app.use(express.json());
 
 // routes
 app.use('/api/auth', authRoutes);
+app.use('/api/agents', agentRoutes);
+app.use('/api/usage', usageRoutes);
+
 
 app.get('/test', (req, res) => {
     res.json({ message: 'Server is working!' });

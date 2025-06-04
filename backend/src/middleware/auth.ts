@@ -11,8 +11,9 @@ interface JwtPayload {
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer '))
-        return res.status(401).json({ message: 'No token provided' });
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.status(401).json({ message: 'No token provided' }); return;
+    }
 
     const token = authHeader.split(' ')[1];
 
@@ -21,7 +22,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         // Check if user exists in database
         const user = await User.findById(decoded.id);
         if (!user) {
-            return res.status(401).json({ message: 'User not found' });
+            res.status(401).json({ message: 'User not found' });
+            return;
         }
         req.user = { id: decoded.id };
         next();
