@@ -6,6 +6,7 @@ import agentRoutes from './routes/agentRoutes';
 import usageRoutes from './routes/usageRoutes';
 import activityRoutes from './routes/activityRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
+import sourceRoutes from './routes/sourceRoutes';
 
 
 
@@ -30,6 +31,7 @@ app.use('/api/agents', agentRoutes);
 app.use('/api/usage', usageRoutes);
 app.use('/api/activity', activityRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/sources', sourceRoutes);
 
 
 
