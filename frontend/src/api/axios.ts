@@ -15,6 +15,7 @@ const axiosInstance = axios.create({
 // ✅ Automatically attach token if available
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem("chat-agent-token");
+  console.log(token)
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -23,7 +24,7 @@ axiosInstance.interceptors.request.use((config) => {
 
 // ✅ Global error handler (optional)
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => response.data,
   (error) => {
     // You can handle 401s, logging, Sentry, etc. here
     if (error.response?.status === 401) {

@@ -21,7 +21,7 @@ const Login = () => {
     try {
       const response : any = await axiosInstance.post("/auth/login", formData);
       console.log(response)
-      if(response.data.success){
+      if(response.success){
         toast.success("Login successful!");
         localStorage.setItem("chat-agent-token", response.data.token)
         navigate("/agents");
