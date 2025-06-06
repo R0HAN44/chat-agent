@@ -25,7 +25,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             res.status(401).json({ message: 'User not found' });
             return;
         }
-        req.user = { id: decoded.id };
+         (req as any).user = { id: decoded.id };
         next();
     } catch (err) {
         res.status(403).json({ message: 'Token is invalid' });

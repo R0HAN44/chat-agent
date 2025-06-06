@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import Integration from '../models/Integration';
 import { sendSuccess, sendError } from '../utils/apiResponse';
+import { CustomRequest } from '../types/global';
 
-export const createIntegration = async (req: Request, res: Response) => {
+export const createIntegration = async (req: CustomRequest, res: Response) => {
   try {
     const { agentId, type, config } = req.body;
 
@@ -19,7 +20,7 @@ export const createIntegration = async (req: Request, res: Response) => {
   }
 };
 
-export const getIntegrationsByAgent = async (req: Request, res: Response) => {
+export const getIntegrationsByAgent = async (req: CustomRequest, res: Response) => {
   try {
     const { agentId } = req.params;
     const integrations = await Integration.find({ agentId });

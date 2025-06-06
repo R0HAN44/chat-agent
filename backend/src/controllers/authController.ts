@@ -5,12 +5,10 @@ import { sendCreated, sendSuccess, sendUnauthorized, sendError } from '../utils/
 
 export const register = async (req: Request, res: Response) => {
     const { email, password, name } = req.body;
-
     try {
         const user = await registerUser(email, password, name);
         const token = generateToken(user.id.toString());
-        
-        sendCreated(res, "Registration successful", { token, user });
+        sendCreated(res, "Registration successful", { token, user: { id: user.id, name: user.name, email: user.email } });
         return;
     } catch (err) {
         sendError(res, 'Registration failed', err);
@@ -29,7 +27,7 @@ export const login = async (req: Request, res: Response) => {
         }
 
         const token = generateToken(user.id.toString());
-        sendSuccess(res, "Login successful", { token, user });
+        sendSuccess(res, "Login successful", { token, user: { id: user.id, name: user.name, email: user.email } });
         return;
     } catch (err) {
         sendError(res, 'Login failed', err);

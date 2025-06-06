@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import Source from '../models/Source';
 import { sendError, sendSuccess } from '../utils/apiResponse';
+import { CustomRequest } from '../types/global';
 
 // POST /api/sources
-export const createSource = async (req: Request, res: Response) : Promise<any> => {
+export const createSource = async (req: CustomRequest, res: Response) : Promise<any> => {
   try {
     const { type, title, content, fileUrl, metadata, agentId } = req.body;
     const userId = req?.user?.id;
@@ -25,7 +26,7 @@ export const createSource = async (req: Request, res: Response) : Promise<any> =
 };
 
 // GET /api/sources/:agentId
-export const getSourcesByAgent = async (req: Request, res: Response)  :Promise<any> => {
+export const getSourcesByAgent = async (req: CustomRequest, res: Response)  :Promise<any> => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;
@@ -39,7 +40,7 @@ export const getSourcesByAgent = async (req: Request, res: Response)  :Promise<a
 };
 
 // DELETE /api/sources/:sourceId
-export const deleteSource = async (req: Request, res: Response) : Promise<any> => {
+export const deleteSource = async (req: CustomRequest, res: Response) : Promise<any> => {
   try {
     const { sourceId } = req.params;
     const userId = req?.user?.id;

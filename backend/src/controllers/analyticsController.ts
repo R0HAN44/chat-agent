@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import ChatLog from '../models/ChatLog';
 import { sendError, sendSuccess } from '../utils/apiResponse';
 import mongoose from 'mongoose';
+import { CustomRequest } from '../types/global';
 
-export const getChatAnalytics = async (req: Request, res: Response) : Promise<any>  => {
+export const getChatAnalytics = async (req: CustomRequest, res: Response) : Promise<any>  => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;
@@ -27,7 +28,7 @@ export const getChatAnalytics = async (req: Request, res: Response) : Promise<an
   }
 };
 
-export const getTopicAnalytics = async (req: Request, res: Response) : Promise<any> => {
+export const getTopicAnalytics = async (req: CustomRequest, res: Response) : Promise<any> => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;
@@ -51,7 +52,7 @@ export const getTopicAnalytics = async (req: Request, res: Response) : Promise<a
   }
 };
 
-export const getSentimentAnalytics = async (req: Request, res: Response) : Promise<any>  => {
+export const getSentimentAnalytics = async (req: CustomRequest, res: Response) : Promise<any>  => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;

@@ -2,9 +2,10 @@ import { Request, Response } from 'express';
 import ChatLog from '../models/ChatLog';
 import Lead from '../models/Lead';
 import { sendError, sendSuccess } from '../utils/apiResponse';
+import { CustomRequest } from '../types/global';
 
 // GET /api/activity/chats/:agentId
-export const getChatLogs = async (req: Request, res: Response) : Promise<any> => {
+export const getChatLogs = async (req: CustomRequest, res: Response) : Promise<any> => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;
@@ -18,7 +19,7 @@ export const getChatLogs = async (req: Request, res: Response) : Promise<any> =>
 };
 
 // GET /api/activity/leads/:agentId
-export const getLeads = async (req: Request, res: Response) : Promise<any> => {
+export const getLeads = async (req: CustomRequest, res: Response) : Promise<any> => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;
