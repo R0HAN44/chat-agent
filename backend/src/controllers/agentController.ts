@@ -11,11 +11,10 @@ import mongoose from 'mongoose';
 
 export const createAgentHandler = async (req: Request, res: Response) => {
     try {
-        const { name, model, systemPrompt } = req.body;
-        
+        const { name, aimodel, systemPrompt } = req.body;
         // Type assertion - safe because authenticate middleware guarantees user exists
         const user = (req as any).user;
-        
+
         if (!user?.id) {
             sendError(res, 'Authentication required');
             return;
@@ -24,10 +23,11 @@ export const createAgentHandler = async (req: Request, res: Response) => {
         const agent = await agentService.createAgent({
             userId: new mongoose.Types.ObjectId(user.id),
             name,
-            model,
+            aimodel,
             systemPrompt,
             status: 'active',
         });
+        console.log(agent)
         sendCreated(res, 'Agent created successfully', agent);
     } catch (error) {
         sendError(res, 'Agent creation failed', error);
@@ -37,7 +37,7 @@ export const createAgentHandler = async (req: Request, res: Response) => {
 export const getAllAgentsHandler = async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
-        
+
         if (!user?.id) {
             sendError(res, 'Authentication required');
             return;
@@ -54,7 +54,7 @@ export const getAgentByIdHandler = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const user = (req as any).user;
-        
+
         if (!user?.id) {
             sendError(res, 'Authentication required');
             return;
@@ -73,11 +73,44 @@ export const getAgentByIdHandler = async (req: Request, res: Response) => {
     }
 };
 
+export const updateAgentByIdHandler = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const user = (req as any).user;
+
+        if (!user?.id) {
+            sendError(res, 'Authentication required');
+            return;
+        }
+
+        const existingAgent = await agentService.getAgentById(id, user.id);
+
+        if (!existingAgent) {
+            sendNotFound(res, 'Agent not found');
+            return;
+        }
+
+        const { aimodel, name, systemPrompt, status } = req.body;
+
+        const updatedAgent = await agentService.updateAgentById(id, user.id, {
+            aimodel,
+            name,
+            systemPrompt,
+            status
+        });
+
+        sendSuccess(res, 'Agent updated successfully', updatedAgent);
+    } catch (error) {
+        sendError(res, 'Failed to update agent', error);
+    }
+};
+
+
 export const deleteAgentHandler = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const user = (req as any).user;
-        
+
         if (!user?.id) {
             sendError(res, 'Authentication required');
             return;

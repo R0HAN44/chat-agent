@@ -9,6 +9,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useSourceStore } from "@/store/useSourcesStore";
+import axiosInstance from "@/api/axios";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import { useState } from "react";
+import { DEFAULT_PROMPT } from "@/utils/systemPrompts";
+import { toast } from "sonner";
+
+
 
 const navItems = [
     { label: "Files", path: "files" },
@@ -21,11 +30,44 @@ const CreateAgentSourceLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
+    const [agentTitle, setAgentTitle] = useState("")
+
+    const { sources } = useSourceStore();
+
     const isActive = (path: string) => location.pathname.includes(path);
 
     const goBackToAgents = () => {
         navigate("/agents");
     };
+
+    const createNewAgent = async () => {
+
+        if(!agentTitle || agentTitle.length === 0){
+            alert("Please enter agent title")
+            return;
+        }
+        const agentReqObj = {
+            name: agentTitle,
+            systemPrompt : DEFAULT_PROMPT,
+            aimodel : 'gpt-4',
+        }
+        const agentResponse = await axiosInstance.post("/agents",agentReqObj)
+        console.log(agentResponse);
+        let response : any;
+        for (const source of sources) {
+            try {
+                response = await axiosInstance.post("/sources", {...source, agentId : agentResponse.data._id});
+                console.log("Source created:", response.data);
+            } catch (err) {
+                console.error("Error creating source:", err);
+            }
+        }
+        if(response.success){
+            toast.success("Agent Created successfully");
+            navigate("/agents")
+        }
+    };
+
 
     return (
         <>
@@ -80,7 +122,16 @@ const CreateAgentSourceLayout = () => {
                                 <p><strong className="text-foreground">Total Size:</strong> 145 MB</p>
                             </div>
                             <div className="space-y-2">
-                                <Button className="w-full">Create New Agent</Button>
+                                <div className="mb-4">
+                                    <Label htmlFor="title" className="block mb-1">Title</Label>
+                                    <Input
+                                        id="agent-title"
+                                        value={agentTitle}
+                                        onChange={(e) => setAgentTitle(e.target.value)}
+                                        placeholder="Enter a Agent title"
+                                    />
+                                </div>
+                                <Button className="w-full" onClick={createNewAgent}>Create New Agent</Button>
                             </div>
                         </CardContent>
                     </Card>

@@ -6,7 +6,7 @@ import { CustomRequest } from '../types/global';
 // POST /api/sources
 export const createSource = async (req: CustomRequest, res: Response) : Promise<any> => {
   try {
-    const { type, title, content, fileUrl, metadata, agentId } = req.body;
+    const { type, title, content, fileUrl, metadata, agentId, sourcesArray } = req.body;
     const userId = req?.user?.id;
 
     const newSource = await Source.create({
@@ -16,7 +16,8 @@ export const createSource = async (req: CustomRequest, res: Response) : Promise<
       title,
       content,
       fileUrl,
-      metadata
+      metadata,
+      sourcesArray
     });
 
     return sendSuccess(res, 'Source created successfully', newSource);

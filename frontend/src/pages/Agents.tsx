@@ -91,7 +91,7 @@ const Agents = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {sampleAgents.map((agent) => (
+        {agents?.map((agent) => (
           <Card
             key={agent._id}
             className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-primary border border-muted"

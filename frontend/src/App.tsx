@@ -9,7 +9,7 @@ import Agents from "./pages/Agents";
 import Usage from "./pages/Usage";
 import Settings from "./pages/Settings";
 import { Toaster } from "sonner";
-import Playground from "./pages/Playground";
+import Playground from "./pages/playground/Playground";
 import AgentDetailLayout from "./components/AgentDetailLayout";
 import Sources from "./pages/Sources";
 import Activity from "./pages/Activity";
@@ -45,7 +45,6 @@ function App() {
             {/* Protected Route */}
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
-                <Route path="/" element={<HomePage />} />
                 <Route path="/agents" element={<Agents />} />
                 <Route path="/usage" element={<Usage />} />
                 <Route path="/settings" element={<Settings />} />
