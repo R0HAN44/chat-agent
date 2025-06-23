@@ -9,7 +9,7 @@ const router = Router();
 router.use(authenticate);
 
 router.post('/', createSource);
-router.get('/:agentId', getSourcesByAgent);
+router.get('/', getSourcesByAgent);
 router.delete('/:sourceId', deleteSource);
 router.post('/upload', upload.single('file'), async (req, res) => {
   try {

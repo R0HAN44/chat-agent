@@ -29,10 +29,10 @@ export const createSource = async (req: CustomRequest, res: Response) : Promise<
 // GET /api/sources/:agentId
 export const getSourcesByAgent = async (req: CustomRequest, res: Response)  :Promise<any> => {
   try {
-    const { agentId } = req.params;
+    const { agentId, type } = req.query;
     const userId = req?.user?.id;
 
-    const sources = await Source.find({ userId, agentId });
+    const sources = await Source.find({ userId, agentId, type});
 
     return sendSuccess(res, 'Sources fetched', sources);
   } catch (error) {

@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Globe, Pencil, Trash2, Check } from "lucide-react";
 import { useSourceStore } from "@/store/useSourcesStore";
+import { useAgentStore } from "@/store/useAgentStore";
+import axiosInstance from "@/api/axios";
 
 type FetchedGroup = {
   url: string;
@@ -20,6 +22,7 @@ const WebsiteSource = () => {
   const [editedLink, setEditedLink] = useState("");
 
   const { addSource } = useSourceStore();
+  const { selectedAgent } = useAgentStore();
 
 
   const handleFetchLinks = () => {
@@ -76,6 +79,22 @@ const WebsiteSource = () => {
     };
     addSource(newSource);
   }, [fetchedGroups])
+
+  useEffect(()=>{
+    getSourcesByAgent()
+  },[])
+
+  const getSourcesByAgent = async () => {
+    try {
+      const response : any = await axiosInstance.get(`/sources?agentId=${selectedAgent?._id}&type=website`);
+      console.log(response)
+      if(response.success){
+        setFetchedGroups(response?.data[0]?.sourcesArray);
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto mt-10 space-y-8">

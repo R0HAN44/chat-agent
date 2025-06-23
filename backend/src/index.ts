@@ -11,6 +11,7 @@ import sourceRoutes from './routes/sourceRoutes';
 
 
 import cors from 'cors';
+import { main } from './agent-rag';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use('/api/sources', sourceRoutes);
 
 
 app.get('/test', (req, res) => {
+    // main();
     res.json({ message: 'Server is working!' });
 });
 

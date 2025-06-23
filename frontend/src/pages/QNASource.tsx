@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Plus, Check } from "lucide-react";
 import { useSourceStore } from "@/store/useSourcesStore";
+import axiosInstance from "@/api/axios";
+import { useAgentStore } from "@/store/useAgentStore";
 
 type QNAGroup = {
   title: string;
@@ -21,6 +23,7 @@ const QNASource = () => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const { addSource, sources } = useSourceStore();
+    const { selectedAgent } = useAgentStore();
   
 
   const handleAddQuestion = () => {
@@ -78,6 +81,22 @@ const QNASource = () => {
         };
       addSource(newSource);
     },[qnaGroups])
+
+    useEffect(()=>{
+    getSourcesByAgent()
+  },[])
+
+  const getSourcesByAgent = async () => {
+    try {
+      const response : any = await axiosInstance.get(`/sources?agentId=${selectedAgent?._id}&type=qna`);
+      console.log(response)
+      if(response.success){
+        setQnaGroups(response?.data[0]?.sourcesArray);
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto mt-10 space-y-8">

@@ -30,8 +30,6 @@ const AgentDetailLayout = () => {
 
     const navItem = (label: string, path: string) => {
         const isActive = location.pathname.includes(label.toLowerCase());
-        console.log(location.pathname)
-        console.log(location.state)
         return (
             <NavigationMenuItem key={label}>
                 <NavigationMenuLink

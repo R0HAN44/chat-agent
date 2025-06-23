@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useSourceStore } from "@/store/useSourcesStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DEFAULT_PROMPT } from "@/utils/systemPrompts";
 import axiosInstance from "@/api/axios";
 import { toast } from "sonner";
+import { useAgentStore } from "@/store/useAgentStore";
 
 const navItems = [
   { label: "Files", path: "files" },
@@ -28,37 +29,50 @@ const SourceLayout = () => {
 
   const isActive = (path: string) => location.pathname.includes(path);
 
-   const [agentTitle, setAgentTitle] = useState("")
-  
+  const [agentTitle, setAgentTitle] = useState("")
+  const [filesDetails,setFilesDetails] = useState({numberOfFiles : 0, size : 0})
+
   const { sources } = useSourceStore();
+  console.log(sources)
+  const { selectedAgent } = useAgentStore();
 
-   const createNewAgent = async () => {
+  const retrainAgent = async () => {
+    let response: any;
+    for (const source of sources) {
+      try {
+        response = await axiosInstance.post("/sources", { ...source, agentId: selectedAgent?._id });
+        console.log("Source created:", response.data);
+      } catch (err) {
+        console.error("Error creating source:", err);
+      }
+    }
+    if (response.success) {
+      toast.success("Agent Created successfully");
+      navigate("/agents")
+    }
+  };
 
-        if(!agentTitle || agentTitle.length === 0){
-            alert("Please enter agent title")
-            return;
-        }
-        const agentReqObj = {
-            name: agentTitle,
-            systemPrompt : DEFAULT_PROMPT,
-            aimodel : 'gpt-4',
-        }
-        const agentResponse = await axiosInstance.post("/agents",agentReqObj)
-        console.log(agentResponse);
-        let response : any;
-        for (const source of sources) {
-            try {
-                response = await axiosInstance.post("/sources", {...source, agentId : agentResponse.data._id});
-                console.log("Source created:", response.data);
-            } catch (err) {
-                console.error("Error creating source:", err);
-            }
-        }
-        if(response.success){
-            toast.success("Agent Created successfully");
-            navigate("/agents")
-        }
-    };
+  useEffect(() => {
+    let totalSizeMB = 0;
+    let totalFiles = 0;
+
+    totalFiles = sources.reduce((acc: number, source: any) => {
+      if (source.type === "document") {
+        return acc + 1; // each document is 1 file
+      } else {
+        return acc + (source.sourcesArray?.length || 0);
+      }
+    }, 0);
+
+    totalSizeMB = sources.reduce((acc: number, source: any) => {
+      if (source.type === "document") {
+        return acc + (source.metadata?.size || 0) / 1_000_000; // bytes to MB
+      } else {
+        return acc + (source.sourcesArray?.length || 0) / 1000; // approximate size
+      }
+    }, 0);
+    setFilesDetails({ numberOfFiles: totalFiles, size: Number(totalSizeMB.toFixed(2)) })
+  }, [sources]);
 
   return (
     <div className="flex min-h-[calc(100vh-64px)]">
@@ -98,11 +112,11 @@ const SourceLayout = () => {
           </CardHeader>
           <CardContent>
             <div className="text-sm mb-4 space-y-1 text-muted-foreground">
-              <p><strong className="text-foreground">Total Files:</strong> 22</p>
-              <p><strong className="text-foreground">Total Size:</strong> 145 MB</p>
+              <p><strong className="text-foreground">Total Files:</strong> {filesDetails.numberOfFiles}</p>
+              <p><strong className="text-foreground">Total Size:</strong> {filesDetails.size} MB</p>
             </div>
             <div className="space-y-2">
-              <Button onClick={createNewAgent} variant="secondary" className="w-full">
+              <Button onClick={retrainAgent} variant="secondary" className="w-full">
                 Retrain Agent
               </Button>
             </div>
