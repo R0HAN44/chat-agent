@@ -159,7 +159,7 @@ const QNASource = () => {
 
       {/* Scrollable list of groups */}
       <div className="h-[300px] overflow-y-auto space-y-4 pr-2">
-        {qnaGroups.map((group, idx) => (
+        {qnaGroups?.map((group, idx) => (
           <Card
             key={idx}
             className="bg-background text-foreground rounded-xl p-4 space-y-2 shadow"

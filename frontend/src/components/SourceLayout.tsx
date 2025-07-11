@@ -47,6 +47,8 @@ const SourceLayout = () => {
       }
     }
     if (response.success) {
+      const agentRetrainResp = await axiosInstance.post(`/agents/train-agent`, {agentId : selectedAgent?._id});
+      console.log(agentRetrainResp)
       toast.success("Agent Created successfully");
       navigate("/agents")
     }

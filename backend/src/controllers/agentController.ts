@@ -8,6 +8,9 @@ import {
     sendNotFound,
 } from '../utils/apiResponse';
 import mongoose from 'mongoose';
+import { getSourcesByAgent } from './sourceController';
+import Source from '../models/Source';
+import { handlePDFSource, handleQNASource, handleTextSource, handleWebsiteSource } from '../services/trainAgentService';
 
 export const createAgentHandler = async (req: Request, res: Response) => {
     try {
@@ -124,6 +127,46 @@ export const deleteAgentHandler = async (req: Request, res: Response) => {
         }
 
         sendSuccess(res, 'Agent deleted successfully');
+    } catch (error) {
+        sendError(res, 'Failed to delete agent', error);
+    }
+};
+
+export const trainAgent = async (req: Request, res: Response) => {
+    try {
+        const { agentId } = req.body;
+        const user = (req as any).user;
+        if(!agentId){
+            sendError(res, 'Agent ID is required');
+            return;
+        }
+        const sources = await Source.find({ userId : user?.id, agentId});
+        console.log(sources);
+        // sendSuccess(res, 'Agent trained successfully');
+        console.log(agentId);
+        for (const source of sources) {
+            switch (source.type) {
+                case 'document':
+                    await handlePDFSource(source);
+                    break;
+                case 'website':
+                    await handleWebsiteSource(source);
+                    break;
+                case 'qna':
+                    await handleQNASource(source);
+                    break;
+                case 'text':
+                    await handleTextSource(source);
+                    break;
+                default:
+                    console.warn(`Unknown source type: ${source.type}`);
+                    break;
+            }
+        }
+
+        sendSuccess(res, 'Agent training initiated successfully');
+
+
     } catch (error) {
         sendError(res, 'Failed to delete agent', error);
     }

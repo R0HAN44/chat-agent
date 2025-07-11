@@ -146,7 +146,7 @@ const WebsiteSource = () => {
 
       {/* Fetched Groups Display */}
       <div className="h-[400px] overflow-y-auto space-y-4 pr-2">
-        {fetchedGroups.map((group, groupIdx) => (
+        {fetchedGroups?.map((group, groupIdx) => (
           <Card
             key={groupIdx}
             className="bg-background text-foreground shadow-md rounded-2xl p-6"
