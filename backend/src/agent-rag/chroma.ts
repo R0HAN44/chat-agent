@@ -1,73 +1,50 @@
-import { ChromaClient, Collection, EmbeddingFunction } from "chromadb";
+import { ChromaClient } from "chromadb";
+import { getTextEmbeddings } from "../utils/embedder";
 
+// ChromaDB client configured for port 8001 (fixed deprecated path)
 const client = new ChromaClient({
   host: "localhost",
-  port: 8000,
+  port: 8001,
   ssl: false,
 });
-let collection: Collection;
 
-// async function deleteCollection() {
-//   await client.deleteCollection({ name: "my-agent" });
-//   console.log("Collection deleted");
-// }
-
-// deleteCollection();
-
-export async function initVectorStore() {
-  collection = await client.getOrCreateCollection({
-    name: "my-agent",
-    embeddingFunction: getOllamaEmbeddingFunction(),
-  });
-}
+const customEmbeddingFunction = {
+  generate: async (texts: string[]) => {
+    return await getTextEmbeddings(texts);
+  },
+};
 
 export async function addToVectorStore(agentId: string, texts: string[]) {
-  if (!collection) throw new Error("Vector store not initialized.");
-  const embeddings = await getEmbeddings(texts);
+  try {
+    // First, test the connection
+    console.log("Testing ChromaDB connection...");
+    const heartbeat = await client.heartbeat();
+    console.log("ChromaDB heartbeat:", heartbeat);
 
-  await collection.add({
-    ids: texts.map((_, i) => `${agentId}_${Date.now()}_${i}`),
-    embeddings,
-    documents: texts,
-    metadatas: texts.map(() => ({ agentId })),
-  });
+    const embeddings = await getTextEmbeddings(texts);
+    console.log("embeddings", embeddings);
+
+    console.log("Attempting to get or create collection...");
+    const collection = await client.getOrCreateCollection({
+      name: agentId,
+      embeddingFunction: customEmbeddingFunction,
+    });
+    console.log("Collection retrieved:", collection);
+
+    // Add documents to collection
+    const ids = texts.map((_, index) => `doc_${Date.now()}_${index}`);
+    
+    await collection.add({
+      ids: ids,
+      documents: texts,
+      embeddings: embeddings,
+    });
+
+    console.log(`Successfully added ${texts.length} documents to collection ${agentId}`);
+    return { success: true, message: `Added ${texts.length} documents` };
+
+  } catch (error: any) {
+    console.error("Error in addToVectorStore:", error);
+    return { success: false, message: `Error: ${error.message}` };
+  }
 }
-
-export async function queryVectorStore(agentId: string, query: string, topK = 10) {
-  if (!collection) throw new Error("Vector store not initialized.");
-
-  const queryEmbedding = await getEmbeddings([query]);
-
-  const results = await collection.query({
-    queryEmbeddings: queryEmbedding,
-    nResults: topK,
-    where: { agentId },
-  });
-  console.log(results)
-  return results.documents?.[0] || [];
-}
-
-const getOllamaEmbeddingFunction = (): EmbeddingFunction => ({
-  generate: async (texts: string[]): Promise<number[][]> => {
-    const results: number[][] = [];
-
-    for (const text of texts) {
-      const res = await fetch("http://localhost:11434/api/embeddings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "nomic-embed-text",
-          prompt: text,
-        }),
-      });
-
-      const data : any = await res.json();
-      results.push(data.embedding);
-    }
-    console.log(results)
-    return results;
-  },
-});
-
-// Optional: reuse this in case you need external embeddings (OpenAI, etc.)
-export const getEmbeddings = getOllamaEmbeddingFunction().generate;

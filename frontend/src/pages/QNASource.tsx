@@ -45,7 +45,13 @@ const QNASource = () => {
       setQnaGroups(updated);
       setEditingIndex(null);
     } else {
-      setQnaGroups([...qnaGroups, newGroup]);
+      console.log(qnaGroups)
+      if(qnaGroups){
+        setQnaGroups([...qnaGroups, newGroup]);
+      }else{
+        setQnaGroups([newGroup]);
+      }
+      
     }
 
     // Reset

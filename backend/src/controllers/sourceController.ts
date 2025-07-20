@@ -8,7 +8,7 @@ export const createSource = async (req: CustomRequest, res: Response) : Promise<
   try {
     const { type, title, content, fileUrl, metadata, agentId, sourcesArray } = req.body;
     const userId = req?.user?.id;
-
+    console.log("sourcesArray",sourcesArray)
     const newSource = await Source.create({
       userId,
       agentId,

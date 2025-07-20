@@ -63,8 +63,17 @@ const CreateAgentSourceLayout = () => {
             }
         }
         if(response.success){
-            toast.success("Agent Created successfully");
-            navigate("/agents")
+            try {
+                const agentRetrainResp : any = await axiosInstance.post(`/agents/train-agent`, {agentId : agentResponse.data._id});
+                console.log(agentRetrainResp)
+                if(agentRetrainResp.success){
+                toast.success("Agent Created successfully");
+                navigate("/agents")
+                }
+            } catch (error) {
+                toast.error("Error training agent");
+            }
+            
         }
     };
 
