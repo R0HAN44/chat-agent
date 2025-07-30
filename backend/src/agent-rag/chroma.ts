@@ -48,3 +48,31 @@ export async function addToVectorStore(agentId: string, texts: string[]) {
     return { success: false, message: `Error: ${error.message}` };
   }
 }
+
+export async function queryVectorStore(agentId: string, query: string, topK = 3): Promise<any> {
+  try {
+    // Get or create collection for the agent
+    const collection = await client.getOrCreateCollection({
+      name: agentId,
+      embeddingFunction: customEmbeddingFunction,
+    });
+
+    // Embed the query text
+    const queryEmbedding = (await getTextEmbeddings([query]))[0];
+
+    // Query the collection for topK similar documents
+    const results = await collection.query({
+      queryEmbeddings: [queryEmbedding],
+      nResults: topK,
+      include: ["documents", "distances"], // include distances if you want to debug similarity scores
+    });
+
+    // Extract and return matched documents
+    const matchedDocs = results.documents?.[0] || [];
+
+    return matchedDocs;
+  } catch (error) {
+    console.error("Error querying vector store:", error);
+    return [];
+  }
+}

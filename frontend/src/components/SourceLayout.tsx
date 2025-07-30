@@ -115,7 +115,7 @@ const SourceLayout = () => {
           <CardContent>
             <div className="text-sm mb-4 space-y-1 text-muted-foreground">
               <p><strong className="text-foreground">Total Files:</strong> {filesDetails.numberOfFiles}</p>
-              <p><strong className="text-foreground">Total Size:</strong> {filesDetails.size} MB</p>
+              {/* <p><strong className="text-foreground">Total Size:</strong> {filesDetails.size} MB</p> */}
             </div>
             <div className="space-y-2">
               <Button onClick={retrainAgent} variant="secondary" className="w-full">

@@ -127,8 +127,8 @@ const CreateAgentSourceLayout = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="text-sm mb-4 space-y-1 text-muted-foreground">
-                                <p><strong className="text-foreground">Total Files:</strong> 22</p>
-                                <p><strong className="text-foreground">Total Size:</strong> 145 MB</p>
+                                {/* <p><strong className="text-foreground">Total Files:</strong> 22</p> */}
+                                {/* <p><strong className="text-foreground">Total Size:</strong> 145 MB</p> */}
                             </div>
                             <div className="space-y-2">
                                 <div className="mb-4">

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils"; // Utility for className merging (optional)
+import axiosInstance from "@/api/axios";
 
 type Message = {
   role: "user" | "ai";
@@ -16,7 +17,7 @@ type ChatPanelProps = {
 const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
   const [messages, setMessages] = useState<Message[]>([{
     role: "ai",
-    content : "Hey there this your personalized ai assistant. How can i help you?"
+    content: "Hey there this your personalized ai assistant. How can i help you?"
   }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,18 +31,33 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: input, config }),
-      });
-
-      const data = await response.json();
-      const aiMessage: Message = {
-        role: "ai",
-        content: data.reply || "No response.",
+      // Prepare the payload according to your backend API expectations
+      const messagesPayload = {
+        prompt: input,
+        agentId: config._id,  // or agentConfig._id if you use that variable name
+        // add more fields if your backend needs (e.g., userId)
       };
-      setMessages((prev) => [...prev, aiMessage]);
+
+      // POST to the backend using axiosInstance and the agent's ID route
+      const response = await axiosInstance.post(
+        `/agents/chat/${config._id}`, // or `/agents/${agentConfig._id}` if your prop is agentConfig
+        messagesPayload
+      );
+
+      // Assuming your backend returns a ChatLog doc (with .response):
+      const data = response.data;
+      if (data && data.response) {
+        const aiMessage: Message = {
+          role: "ai",
+          content: data.response || "No response.",
+        };
+        setMessages((prev) => [...prev, aiMessage]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: "ai", content: "No response from AI." },
+        ]);
+      }
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -51,6 +67,41 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
       setLoading(false);
     }
   };
+
+
+
+  useEffect(() => {
+    if (!config?._id) return;
+
+    const fetchChatHistory = async () => {
+      try {
+        const response = await axiosInstance.get(`/agents/chat/${config?._id}`);
+        const logs = response.data.chatLogs || [];
+        const formatted: Message[] = [];
+
+        logs.forEach((log: any) => {
+          // Push user message if there's a prompt
+          if (log.prompt) formatted.push({ role: "user", content: log.prompt });
+          // Push AI message if there's a response
+          if (log.response) formatted.push({ role: "ai", content: log.response });
+        });
+
+        setMessages(
+          formatted.length
+            ? formatted
+            : [{
+              role: "ai",
+              content: "Hey there this your personalized ai assistant. How can I help you?"
+            }]
+        );
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
+      }
+    };
+
+    fetchChatHistory();
+  }, []);
+
 
   return (
     <div className="flex flex-col h-full border-l bg-background">

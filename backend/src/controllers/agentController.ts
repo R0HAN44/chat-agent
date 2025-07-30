@@ -11,6 +11,27 @@ import mongoose from 'mongoose';
 import { getSourcesByAgent } from './sourceController';
 import Source from '../models/Source';
 import { handlePDFSource, handleQNASource, handleTextSource, handleWebsiteSource } from '../services/trainAgentService';
+import ChatLog from '../models/ChatLog';
+import Sentiment from "sentiment";
+import keyword_extractor from "keyword-extractor";
+
+export function extractKeywords(text: string): string[] {
+  return keyword_extractor.extract(text, {
+    language: "english",
+    remove_digits: true,
+    return_changed_case: true,
+    remove_duplicates: true
+  });
+}
+
+const sentimentAnalyzer = new Sentiment();
+
+export function analyzeSentiment(text: string): "positive" | "neutral" | "negative" {
+  const result = sentimentAnalyzer.analyze(text);
+  if (result.score > 1) return "positive";
+  if (result.score < -1) return "negative";
+  return "neutral";
+}
 
 export const createAgentHandler = async (req: Request, res: Response) => {
     try {
@@ -177,3 +198,68 @@ export const trainAgent = async (req: Request, res: Response) => {
         sendError(res, 'Failed to delete agent', error);
     }
 };
+
+
+export const getAgentChatHandler = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const user = (req as any).user;
+
+        if (!user?.id) {
+            sendError(res, 'Authentication required');
+            return;
+        }
+
+        const chatLogs = await agentService.getAgentChatLogs(id, user.id);
+
+        if (!chatLogs) {
+            sendNotFound(res, 'Agent chat not found');
+            return;
+        }
+
+        sendSuccess(res, 'Agent chat fetched successfully', chatLogs);
+    } catch (error) {
+        sendError(res, 'Failed to fetch agent chat', error);
+    }
+};
+
+export const postAgentChatHandler = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // agentId
+    const { prompt } = req.body;
+    const user = (req as any).user;
+
+    if (!user?.id) {
+      sendError(res, 'Authentication required');
+      return;
+    }
+    if (!prompt) {
+      sendError(res, 'Prompt required');
+      return;
+    }
+
+    // 1. Call the agent service (e.g., LLM) to get a response
+    const response = await agentService.chatWithAgent(id, prompt, user.id);
+
+    // Optional: Add sentiment/keywords extraction here if needed
+    // For example:
+    const sentiment = analyzeSentiment(prompt);
+    const keywords = extractKeywords(prompt + " " + response);
+
+    // 2. Save this exchange as a ChatLog
+    const chatLog = await ChatLog.create({
+      userId: user.id,
+      agentId: id,
+      prompt,
+      response,
+      sentiment, 
+      keywords,
+    });
+
+    // 3. Return the chat log (frontend expects prompt & response at least)
+    sendSuccess(res, 'Agent chat logged successfully', chatLog);
+  } catch (error) {
+    sendError(res, 'Failed to send agent chat', error);
+  }
+};
+
