@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export type ActionType = 'custom' | 'button' | 'web_search' | 'collect_leads';
+export type ActionType = 'api_call' | 'button' | 'redirect' | 'collect_leads' | 'function_call';
 
 export interface IAction extends Document {
     agentId: mongoose.Types.ObjectId;
@@ -16,7 +16,7 @@ const actionSchema = new Schema<IAction>({
     name: { type: String, required: true },
     type: {
         type: String,
-        enum: ['custom', 'button', 'web_search', 'collect_leads'],
+        enum: ['api_call', 'button', 'redirect', 'collect_leads', 'function_call'],
         required: true
     },
     payload: { type: Schema.Types.Mixed, required: true },
