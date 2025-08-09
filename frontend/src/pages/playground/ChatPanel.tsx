@@ -2,64 +2,151 @@ import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils"; // Utility for className merging (optional)
+import { cn } from "@/lib/utils";
 import axiosInstance from "@/api/axios";
 
+// --- Types ---
 type Message = {
   role: "user" | "ai";
   content: string;
+  action?: string | null;
+  action_payload?: Record<string, any> | null;
 };
 
 type ChatPanelProps = {
   config: any;
 };
 
+// --- Helper for rendering action UIs ---
+const ActionUI: React.FC<{
+  action: string;
+  payload: any;
+  onSubmitLead?: (fields: Record<string, string>) => void;
+}> = ({ action, payload, onSubmitLead }) => {
+  console.log(action, payload);
+  if (!action) return null;
+
+  // Action: Redirect
+  if (action === "redirect" && payload) {
+    return (
+      <div className="mt-2">
+        <Button
+          variant="secondary"
+          onClick={() => window.open(payload, "_blank")}
+        >
+          Go to {payload}
+        </Button>
+      </div>
+    );
+  }
+
+  // Action: API Call
+  if (action === "api_call" && payload?.url) {
+    return (
+      <div className="mt-2 text-xs opacity-70">
+        <span>API Called: </span>
+        <code>
+          {payload.method?.toUpperCase() || "POST"} {payload.url}
+        </code>
+      </div>
+    );
+  }
+
+  // Action: Button
+  if (action === "button") {
+    return (
+      <div className="mt-2">
+        <Button
+          variant="outline"
+          onClick={() => alert("Button action triggered!")}
+        >
+          {payload?.label || "Action"}
+        </Button>
+      </div>
+    );
+  }
+
+  // Action: Collect Leads (form rendering)
+  if (action === "collect_leads" && payload?.fields?.length) {
+    const [formData, setFormData] = useState<Record<string, string>>({});
+    return (
+      <form
+        className="flex flex-col gap-2 mt-2"
+        onSubmit={e => {
+          e.preventDefault();
+          if (onSubmitLead) onSubmitLead(formData);
+        }}
+      >
+        {payload.fields.map((field: any, idx: number) => (
+          <Input
+            key={field.key || idx}
+            placeholder={field.label || "Field"}
+            value={formData[field.key] || ""}
+            onChange={e =>
+              setFormData(f => ({ ...f, [field.key]: e.target.value }))
+            }
+            required
+          />
+        ))}
+        <Button type="submit">Submit</Button>
+      </form>
+    );
+  }
+
+  // Default: not handled
+  return null;
+};
+
+// --- Main ChatPanel ---
 const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
-  const [messages, setMessages] = useState<Message[]>([{
-    role: "ai",
-    content: "Hey there this your personalized ai assistant. How can i help you?"
-  }]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "ai",
+      content: "Hey there, this is your personalized AI assistant. How can I help you?",
+    },
+  ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
+  // Handle sending user message + AI response (with actions)
+  const sendMessage = async (leadPayload?: Record<string, string>) => {
+    if (!input.trim() && !leadPayload) return;
 
-    const userMessage: Message = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    if (!leadPayload) {
+      const userMessage: Message = { role: "user", content: input };
+      setMessages(prev => [...prev, userMessage]);
+    }
     setInput("");
     setLoading(true);
 
     try {
-      // Prepare the payload according to your backend API expectations
-      const messagesPayload = {
+      const messagesPayload: any = {
         prompt: input,
-        agentId: config._id,  // or agentConfig._id if you use that variable name
-        // add more fields if your backend needs (e.g., userId)
+        agentId: config._id,
       };
+      if (leadPayload) {
+        messagesPayload.leadPayload = leadPayload;
+      }
 
-      // POST to the backend using axiosInstance and the agent's ID route
       const response = await axiosInstance.post(
-        `/agents/chat/${config._id}`, // or `/agents/${agentConfig._id}` if your prop is agentConfig
+        `/agents/chat/${config._id}`,
         messagesPayload
       );
 
-      // Assuming your backend returns a ChatLog doc (with .response):
-      const data = response.data;
-      if (data && data.response) {
-        const aiMessage: Message = {
-          role: "ai",
-          content: data.response || "No response.",
-        };
-        setMessages((prev) => [...prev, aiMessage]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { role: "ai", content: "No response from AI." },
-        ]);
-      }
+      console.log("API Response:", response.data);
+
+      const { chatLog, action, action_payload } = response.data || {};
+
+      const aiMessage: Message = {
+        role: "ai",
+        content: chatLog?.response || "No response.",
+        action: action ?? null,
+        action_payload: action_payload ?? null,
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
         { role: "ai", content: "Error communicating with AI." },
       ]);
@@ -69,30 +156,33 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
   };
 
 
-
+  // Load chat history (no action UI for history by default)
   useEffect(() => {
     if (!config?._id) return;
 
     const fetchChatHistory = async () => {
       try {
-        const response = await axiosInstance.get(`/agents/chat/${config?._id}`);
+        const response = await axiosInstance.get(`/agents/chat/${config._id}`);
         const logs = response.data.chatLogs || [];
         const formatted: Message[] = [];
 
         logs.forEach((log: any) => {
-          // Push user message if there's a prompt
-          if (log.prompt) formatted.push({ role: "user", content: log.prompt });
-          // Push AI message if there's a response
-          if (log.response) formatted.push({ role: "ai", content: log.response });
+          if (log.prompt)
+            formatted.push({ role: "user", content: log.prompt });
+          if (log.response)
+            formatted.push({ role: "ai", content: log.response });
         });
 
         setMessages(
           formatted.length
             ? formatted
-            : [{
-              role: "ai",
-              content: "Hey there this your personalized ai assistant. How can I help you?"
-            }]
+            : [
+              {
+                role: "ai",
+                content:
+                  "Hey there, this is your personalized AI assistant. How can I help you?",
+              },
+            ]
         );
       } catch (error) {
         console.error("Failed to fetch chat history:", error);
@@ -100,9 +190,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
     };
 
     fetchChatHistory();
-  }, []);
+  }, [config?._id]);
 
+  // Helper: handle leads form submit from ActionUI
+  const handleLeadSubmit = (fields: Record<string, string>) => {
+    setInput(""); // Clear any user-typed input
+    sendMessage(fields); // Send as next user message
+  };
 
+  // --- Rendering messages with action UI where appropriate ---
   return (
     <div className="flex flex-col h-full border-l bg-background">
       {/* Message area */}
@@ -117,7 +213,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
                 : "bg-muted text-muted-foreground"
             )}
           >
-            {msg.content}
+            <div>{msg.content}</div>
+            {/* Only AI can trigger actions */}
+            {msg.role === "ai" && msg.action && msg.action_payload && (
+              <ActionUI
+                action={msg.action}
+                payload={msg.action_payload}
+                onSubmitLead={handleLeadSubmit}
+              />
+            )}
           </div>
         ))}
       </ScrollArea>
@@ -127,11 +231,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
         <Input
           placeholder="Type a message..."
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && sendMessage()}
           disabled={loading}
         />
-        <Button onClick={sendMessage} disabled={loading}>
+        <Button onClick={() => sendMessage()} disabled={loading || !input.trim()}>
           {loading ? "Sending..." : "Send"}
         </Button>
       </div>

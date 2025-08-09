@@ -16,21 +16,21 @@ import Sentiment from "sentiment";
 import keyword_extractor from "keyword-extractor";
 
 export function extractKeywords(text: string): string[] {
-  return keyword_extractor.extract(text, {
-    language: "english",
-    remove_digits: true,
-    return_changed_case: true,
-    remove_duplicates: true
-  });
+    return keyword_extractor.extract(text, {
+        language: "english",
+        remove_digits: true,
+        return_changed_case: true,
+        remove_duplicates: true
+    });
 }
 
 const sentimentAnalyzer = new Sentiment();
 
 export function analyzeSentiment(text: string): "positive" | "neutral" | "negative" {
-  const result = sentimentAnalyzer.analyze(text);
-  if (result.score > 1) return "positive";
-  if (result.score < -1) return "negative";
-  return "neutral";
+    const result = sentimentAnalyzer.analyze(text);
+    if (result.score > 1) return "positive";
+    if (result.score < -1) return "negative";
+    return "neutral";
 }
 
 export const createAgentHandler = async (req: Request, res: Response) => {
@@ -157,19 +157,19 @@ export const trainAgent = async (req: Request, res: Response) => {
     try {
         const { agentId } = req.body;
         const user = (req as any).user;
-        if(!agentId){
+        if (!agentId) {
             sendError(res, 'Agent ID is required');
             return;
         }
-        const extractedSources = await Source.find({ userId : user?.id, agentId});
+        const extractedSources = await Source.find({ userId: user?.id, agentId });
         // console.log(sources);
         // sendSuccess(res, 'Agent trained successfully');
         const seen = new Set();
         const sources = extractedSources.filter(s => {
-            if(seen.has(s.type)) return false;
+            if (seen.has(s.type)) return false;
             seen.add(s.type);
             return true;
-        }) 
+        })
         console.log(agentId);
         for (const source of sources) {
             switch (source.type) {
@@ -223,43 +223,49 @@ export const getAgentChatHandler = async (req: Request, res: Response) => {
     }
 };
 
-export const postAgentChatHandler = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params; // agentId
-    const { prompt } = req.body;
-    const user = (req as any).user;
+export const postAgentChatHandler = async (req: any, res: any) => {
+    try {
+        const { id } = req.params; // agentId
+        const { prompt } = req.body;
+        const user = req.user;
 
-    if (!user?.id) {
-      sendError(res, 'Authentication required');
-      return;
+        if (!user?.id) {
+            sendError(res, 'Authentication required');
+            return;
+        }
+        if (!prompt) {
+            sendError(res, 'Prompt required');
+            return;
+        }
+
+        // 1. Get AI response WITH action info
+        const { answer, action, action_payload }: any = await agentService.chatWithAgent(id, prompt, user.id);
+        console.log({ answer, action, action_payload });
+        // 2. Sentiment & keyword analysis as before
+        const sentiment = analyzeSentiment(prompt);
+        const keywords = extractKeywords(prompt + " " + answer);
+
+        // 3. Store in ChatLog (include action, action_payload)
+        const chatLog = await ChatLog.create({
+            userId: user.id,
+            agentId: id,
+            prompt,
+            response: answer,
+            sentiment,
+            keywords,
+            action,
+            action_payload
+        });
+        console.log({ chatLog, action, action_payload });
+        // 4. Return BOTH
+        sendSuccess(res, 'Agent chat logged successfully', {
+            chatLog,
+            action: action || null,
+            action_payload: action_payload || null
+        });
+    } catch (error) {
+        sendError(res, 'Failed to send agent chat', error);
     }
-    if (!prompt) {
-      sendError(res, 'Prompt required');
-      return;
-    }
-
-    // 1. Call the agent service (e.g., LLM) to get a response
-    const response = await agentService.chatWithAgent(id, prompt, user.id);
-
-    // Optional: Add sentiment/keywords extraction here if needed
-    // For example:
-    const sentiment = analyzeSentiment(prompt);
-    const keywords = extractKeywords(prompt + " " + response);
-
-    // 2. Save this exchange as a ChatLog
-    const chatLog = await ChatLog.create({
-      userId: user.id,
-      agentId: id,
-      prompt,
-      response,
-      sentiment, 
-      keywords,
-    });
-
-    // 3. Return the chat log (frontend expects prompt & response at least)
-    sendSuccess(res, 'Agent chat logged successfully', chatLog);
-  } catch (error) {
-    sendError(res, 'Failed to send agent chat', error);
-  }
 };
+
 

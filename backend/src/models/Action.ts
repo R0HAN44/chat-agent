@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export type ActionType = 'api_call' | 'button' | 'redirect' | 'collect_leads' | 'function_call';
+export type ActionType = 'api_call' | 'button' | 'redirect' | 'collect_leads';
 
 export interface IAction extends Document {
     agentId: mongoose.Types.ObjectId;
