@@ -26,13 +26,18 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    // You can handle 401s, logging, Sentry, etc. here
     if (error.response?.status === 401) {
-      localStorage.removeItem("chat-agent-token");
-      window.location.href = "/login"; // force logout
+      const url = error.config?.url || "";
+
+      // ✅ Skip redirect for public bot endpoints
+      if (!url.startsWith("/agents/")) {
+        localStorage.removeItem("chat-agent-token");
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }
 );
+
 
 export default axiosInstance;
