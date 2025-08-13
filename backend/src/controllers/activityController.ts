@@ -5,7 +5,7 @@ import { sendError, sendSuccess } from '../utils/apiResponse';
 import { CustomRequest } from '../types/global';
 
 // GET /api/activity/chats/:agentId
-export const getChatLogs = async (req: CustomRequest, res: Response) : Promise<any> => {
+export const getChatLogs = async (req: CustomRequest, res: Response): Promise<any> => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;
@@ -19,7 +19,7 @@ export const getChatLogs = async (req: CustomRequest, res: Response) : Promise<a
 };
 
 // GET /api/activity/leads/:agentId
-export const getLeads = async (req: CustomRequest, res: Response) : Promise<any> => {
+export const getLeads = async (req: CustomRequest, res: Response): Promise<any> => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;
@@ -29,5 +29,46 @@ export const getLeads = async (req: CustomRequest, res: Response) : Promise<any>
     return sendSuccess(res, 'Leads fetched successfully', leads);
   } catch (error) {
     return sendError(res, 'Failed to fetch leads', error);
+  }
+};
+
+export const createLead = async (req: CustomRequest, res: Response): Promise<any> => {
+  try {
+    const userId = req?.user?.id;
+    const agentId = req?.params?.agentId;
+    const { email, phone, name, message } = req.body;
+
+    const newLead = new Lead({ userId, agentId, email, phone, name, message });
+    await newLead.save();
+
+    return sendSuccess(res, 'Lead created successfully', newLead);
+  } catch (error) {
+    return sendError(res, 'Failed to create lead', error);
+  }
+};
+
+
+export const updateChatLog = async (req: CustomRequest, res: Response): Promise<any> => {
+  try {
+    const { chatlogid } = req.params;
+    const { response, sentiment } = req.body;
+
+    const updateData: any = {};
+    if (response !== undefined) updateData.response = response;
+    if (sentiment !== undefined) updateData.sentiment = sentiment;
+
+    const updatedLog = await ChatLog.findByIdAndUpdate(
+      { _id: chatlogid },
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedLog) {
+      return sendError(res, 'Chat log not found', null);
+    }
+
+    return sendSuccess(res, 'Chat log updated successfully', updatedLog);
+  } catch (error) {
+    return sendError(res, 'Failed to update chat log', error);
   }
 };

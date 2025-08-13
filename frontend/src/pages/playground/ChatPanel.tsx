@@ -21,8 +21,9 @@ type ChatPanelProps = {
 const ActionUI: React.FC<{
   action: string;
   payload: any;
-  onSubmitLead?: (fields: Record<string, string>) => void;
-}> = ({ action, payload, onSubmitLead }) => {
+  onSubmitLead?: (fields: Record<string, string>, content: any) => void;
+  content?: string;
+}> = ({ action, payload, onSubmitLead, content }) => {
   console.log(action, payload);
   if (!action) return null;
 
@@ -67,23 +68,38 @@ const ActionUI: React.FC<{
   }
 
   // Action: Collect Leads (form rendering)
-  if (action === "collect_leads" && payload?.fields?.length) {
-    const [formData, setFormData] = useState<Record<string, string>>({});
+  // Action: Collect Leads (form rendering)
+  if (action === "collect_leads") {
+    const [formData, setFormData] = useState<Record<string, string>>({
+      username: "",
+      email: "",
+      phone: "",
+    });
+
+    console.log("rendering action collect leads");
+
+    const fields = [
+      { key: "username", label: "Username" },
+      { key: "email", label: "Email" },
+      { key: "phone", label: "Phone Number" },
+    ];
+
     return (
       <form
         className="flex flex-col gap-2 mt-2"
-        onSubmit={e => {
+        onSubmit={(e) => {
           e.preventDefault();
-          if (onSubmitLead) onSubmitLead(formData);
+          if (onSubmitLead) onSubmitLead(formData, content);
         }}
       >
-        {payload.fields.map((field: any, idx: number) => (
+        {fields.map((field) => (
           <Input
-            key={field.key || idx}
-            placeholder={field.label || "Field"}
+            key={field.key}
+            type={field.key === "email" ? "email" : "text"}
+            placeholder={field.label}
             value={formData[field.key] || ""}
-            onChange={e =>
-              setFormData(f => ({ ...f, [field.key]: e.target.value }))
+            onChange={(e) =>
+              setFormData((f) => ({ ...f, [field.key]: e.target.value }))
             }
             required
           />
@@ -92,6 +108,10 @@ const ActionUI: React.FC<{
       </form>
     );
   }
+
+  // Default: not handled
+  return null;
+
 
   // Default: not handled
   return null;
@@ -110,7 +130,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
 
   // Handle sending user message + AI response (with actions)
   const sendMessage = async (leadPayload?: Record<string, string>) => {
-    if (!input.trim() && !leadPayload) return;
+    if (!input.trim()) return;
 
     if (!leadPayload) {
       const userMessage: Message = { role: "user", content: input };
@@ -124,9 +144,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
         prompt: input,
         agentId: config._id,
       };
-      if (leadPayload) {
-        messagesPayload.leadPayload = leadPayload;
-      }
+      // if (leadPayload) {
+      //   messagesPayload.leadPayload = leadPayload;
+      // }
 
       const response = await axiosInstance.post(
         `/agents/chat/${config._id}`,
@@ -192,10 +212,26 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
     fetchChatHistory();
   }, [config?._id]);
 
+  const sendLead = async (fields: Record<string, string>, content: string) => {
+    console.log(fields, content);
+    try {
+      const response = await axiosInstance.post(`/activity/leads/${config._id}`, {
+        name: fields.username,
+        email: fields.email,
+        phone: fields.phone,
+        message: content
+      });
+      console.log(response);
+    } catch (error) {
+      console.error("Failed to send lead:", error);
+    }
+  };
+
   // Helper: handle leads form submit from ActionUI
-  const handleLeadSubmit = (fields: Record<string, string>) => {
+  const handleLeadSubmit = (fields: Record<string, string>, content: string) => {
     setInput(""); // Clear any user-typed input
-    sendMessage(fields); // Send as next user message
+    sendMessage(); // Send as next user message
+    sendLead(fields, content); // Also send as lead
   };
 
   // --- Rendering messages with action UI where appropriate ---
@@ -220,6 +256,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ config }) => {
                 action={msg.action}
                 payload={msg.action_payload}
                 onSubmitLead={handleLeadSubmit}
+                content={msg.content}
               />
             )}
           </div>
