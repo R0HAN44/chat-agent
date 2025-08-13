@@ -12,6 +12,7 @@ import {
   Cell,
 } from "recharts";
 import { ChartBar, TrendingUp } from "lucide-react";
+import axiosInstance from "@/api/axios";
 
 type UsageLog = {
   promptTokens: number;
@@ -49,10 +50,12 @@ const Analytics: React.FC = () => {
       setError("");
       try {
         // Fetch usage logs and chat logs for selected agent
-        const [usageRes, chatRes] = await Promise.all([
-          axios.get(`/api/usage-logs?agentId=${selectedAgent?._id}`),
-          axios.get(`/api/chat-logs?agentId=${selectedAgent?._id}`),
-        ]);
+        // const [usageRes, chatRes] = await Promise.all([
+        //   axios.get(`/api/usage/?agentId=${selectedAgent?._id}`),
+        //   axios.get(`/api/chat-logs?agentId=${selectedAgent?._id}`),
+        // ]);
+        const usageRes = await axiosInstance.get(`/analytics/usage-logs/${selectedAgent?._id}`);
+        const chatRes = await axiosInstance.get(`/analytics/chat-logs/${selectedAgent?._id}`);
 
         // Ensure data are arrays
         setUsageLogs(Array.isArray(usageRes?.data) ? usageRes.data : []);

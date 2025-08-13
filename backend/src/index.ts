@@ -8,6 +8,7 @@ import activityRoutes from './routes/activityRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import sourceRoutes from './routes/sourceRoutes';
 import actionRoutes from './routes/actionRoutes';
+import agentSettingsRoute from './routes/agentSettingsRoute';
 
 
 
@@ -20,9 +21,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-    origin : "http://localhost:5173",
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials : true
+  origin: "http://localhost:5173",
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
 }))
 
 // middleware
@@ -36,12 +37,13 @@ app.use('/api/activity', activityRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/sources', sourceRoutes);
 app.use('/api/actions', actionRoutes);
+app.use('/api/agent-settings', agentSettingsRoute);
 
 
 
 app.get('/test', (req, res) => {
-    // main();
-    res.json({ message: 'Server is working!' });
+  // main();
+  res.json({ message: 'Server is working!' });
 });
 
 // db

@@ -72,7 +72,7 @@ const AgentDetailLayout = () => {
                                 {navItem("Analytics", "/analytics")}
                                 {navItem("Sources", "/sources/files")}
                                 {navItem("Actions", "/actions")}
-                                {navItem("Contacts", "/contacts")}
+                                {navItem("Integrate", "/integrate")}
                                 {navItem("Connect", "/connect")}
                                 {navItem("Settings", "/agent-settings")}
                             </NavigationMenuList>

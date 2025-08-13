@@ -15,7 +15,6 @@ import Sources from "./pages/Sources";
 import Activity from "./pages/Activity";
 import Analytics from "./pages/Analytics";
 import Actions from "./pages/Actions";
-import Contacts from "./pages/Contacts";
 import Connect from "./pages/Connect";
 import AgentSettings from "./pages/AgentSettings";
 import SourceLayout from "./components/SourceLayout";
@@ -24,6 +23,8 @@ import TextSource from "./pages/TextSource";
 import WebsiteSource from "./pages/WebsiteSource";
 import QNASource from "./pages/QNASource";
 import CreateAgentSourceLayout from "./components/CreateAgentSourceLayout";
+import ChatEmbed from "./pages/ChatEmbed";
+import Integrate from "./pages/Integrate";
 
 
 const isAuthenticated = () => {
@@ -41,6 +42,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/embed/:botId" element={<ChatEmbed />} />
 
             {/* Protected Route */}
             <Route element={<ProtectedRoute />}>
@@ -54,7 +56,7 @@ function App() {
                 <Route path="/activity" element={<Activity />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/actions" element={<Actions />} />
-                <Route path="/contacts" element={<Contacts />} />
+                <Route path="/integrate" element={<Integrate />} />
                 <Route path="/connect" element={<Connect />} />
                 <Route path="/agent-settings" element={<AgentSettings />} />
                 <Route element={<SourceLayout />}>

@@ -3,8 +3,9 @@ import ChatLog from '../models/ChatLog';
 import { sendError, sendSuccess } from '../utils/apiResponse';
 import mongoose from 'mongoose';
 import { CustomRequest } from '../types/global';
+import UsageLog from '../models/UsageLog';
 
-export const getChatAnalytics = async (req: CustomRequest, res: Response) : Promise<any>  => {
+export const getChatAnalytics = async (req: CustomRequest, res: Response): Promise<any> => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;
@@ -28,7 +29,7 @@ export const getChatAnalytics = async (req: CustomRequest, res: Response) : Prom
   }
 };
 
-export const getTopicAnalytics = async (req: CustomRequest, res: Response) : Promise<any> => {
+export const getTopicAnalytics = async (req: CustomRequest, res: Response): Promise<any> => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;
@@ -52,7 +53,7 @@ export const getTopicAnalytics = async (req: CustomRequest, res: Response) : Pro
   }
 };
 
-export const getSentimentAnalytics = async (req: CustomRequest, res: Response) : Promise<any>  => {
+export const getSentimentAnalytics = async (req: CustomRequest, res: Response): Promise<any> => {
   try {
     const { agentId } = req.params;
     const userId = req?.user?.id;
@@ -70,5 +71,31 @@ export const getSentimentAnalytics = async (req: CustomRequest, res: Response) :
     return sendSuccess(res, 'Sentiment analysis fetched', sentiments);
   } catch (error) {
     return sendError(res, 'Error fetching sentiment data', error);
+  }
+};
+
+export const getUsageLogs = async (req: CustomRequest, res: Response): Promise<any> => {
+  try {
+    const { agentId } = req.params;
+    const userId = req?.user?.id;
+
+    const usageLogs = await UsageLog.find({ userId: new mongoose.Types.ObjectId(userId), agentId: new mongoose.Types.ObjectId(agentId) });
+
+    return sendSuccess(res, 'Usage logs fetched', usageLogs);
+  } catch (error) {
+    return sendError(res, 'Error fetching usage logs', error);
+  }
+};
+
+export const getChatLogs = async (req: CustomRequest, res: Response): Promise<any> => {
+  try {
+    const { agentId } = req.params;
+    const userId = req?.user?.id;
+
+    const chatLogs = await ChatLog.find({ userId: new mongoose.Types.ObjectId(userId), agentId: new mongoose.Types.ObjectId(agentId) });
+
+    return sendSuccess(res, 'Chat logs fetched', chatLogs);
+  } catch (error) {
+    return sendError(res, 'Error fetching chat logs', error);
   }
 };
