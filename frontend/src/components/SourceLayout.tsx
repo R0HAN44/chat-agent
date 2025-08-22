@@ -30,7 +30,7 @@ const SourceLayout = () => {
   const isActive = (path: string) => location.pathname.includes(path);
 
   const [agentTitle, setAgentTitle] = useState("")
-  const [filesDetails,setFilesDetails] = useState({numberOfFiles : 0, size : 0})
+  const [filesDetails, setFilesDetails] = useState({ numberOfFiles: 0, size: 0 })
 
   const { sources } = useSourceStore();
   console.log(sources)
@@ -47,7 +47,7 @@ const SourceLayout = () => {
       }
     }
     if (response.success) {
-      const agentRetrainResp = await axiosInstance.post(`/agents/train-agent`, {agentId : selectedAgent?._id});
+      const agentRetrainResp = await axiosInstance.post(`/agents/train-agent`, { agentId: selectedAgent?._id });
       console.log(agentRetrainResp)
       toast.success("Agent Created successfully");
       navigate("/agents")
@@ -114,7 +114,7 @@ const SourceLayout = () => {
           </CardHeader>
           <CardContent>
             <div className="text-sm mb-4 space-y-1 text-muted-foreground">
-              <p><strong className="text-foreground">Total Files:</strong> {filesDetails.numberOfFiles}</p>
+              {/* <p><strong className="text-foreground">Total Files:</strong> {filesDetails.numberOfFiles}</p> */}
               {/* <p><strong className="text-foreground">Total Size:</strong> {filesDetails.size} MB</p> */}
             </div>
             <div className="space-y-2">

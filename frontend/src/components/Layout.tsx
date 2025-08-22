@@ -48,8 +48,8 @@ const Layout = () => {
           <NavigationMenu>
             <NavigationMenuList className="space-x-4">
               {navItem("Agents", "/agents")}
-              {navItem("Usage", "/usage")}
-              {navItem("Settings", "/settings")}
+              {/* {navItem("Usage", "/usage")} */}
+              {/* {navItem("Settings", "/settings")} */}
             </NavigationMenuList>
           </NavigationMenu>
 
